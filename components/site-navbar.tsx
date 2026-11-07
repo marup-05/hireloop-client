@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils"
 
 const navLinks = [
   { href: "/jobs", label: "Browse Jobs" },
-  { href: "/companies", label: "Companies" },
+  { href: "/company", label: "Company" },
   { href: "/pricing", label: "Pricing" },
 ]
 
