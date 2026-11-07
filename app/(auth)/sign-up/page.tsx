@@ -4,14 +4,45 @@
 import { useState, type FormEvent } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Eye, EyeOff, BriefcaseBusiness, Loader2 } from "lucide-react"
+import {
+  Eye,
+  EyeOff,
+  BriefcaseBusiness,
+  Loader2,
+  UserRound,
+  Building2,
+  ShieldCheck,
+} from "lucide-react"
 
-// তোমার Better Auth client import
 import { authClient } from "@/lib/auth-client"
+
+type UserRole = "seeker" | "recruiter" | "admin"
+
+const roles = [
+  {
+    value: "seeker",
+    label: "Job Seeker",
+    description: "Find jobs",
+    icon: UserRound,
+  },
+  {
+    value: "recruiter",
+    label: "Recruiter",
+    description: "Hire talent",
+    icon: Building2,
+  },
+  {
+    value: "admin",
+    label: "Admin",
+    description: "Manage platform",
+    icon: ShieldCheck,
+  },
+] as const
 
 const SignUpPage = () => {
   const router = useRouter()
 
+  const [selectedRole, setSelectedRole] = useState<UserRole>("seeker")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -29,7 +60,6 @@ const SignUpPage = () => {
     const password = formData.get("password") as string
     const confirmPassword = formData.get("confirmPassword") as string
 
-    // Check whether passwords match
     if (password !== confirmPassword) {
       setError("Passwords do not match.")
       return
@@ -38,11 +68,11 @@ const SignUpPage = () => {
     try {
       setIsLoading(true)
 
-      // Better Auth email signup
       const { data, error } = await authClient.signUp.email({
         name,
         email,
         password,
+        role: selectedRole,
         callbackURL: "/",
       })
 
@@ -52,7 +82,6 @@ const SignUpPage = () => {
       }
 
       if (data) {
-        // Registration successful
         router.push("/")
         router.refresh()
       }
@@ -83,7 +112,8 @@ const SignUpPage = () => {
         {/* Form Card */}
         <div className="rounded-2xl border border-white/10 bg-[#0d0d0d]/90 p-6 shadow-2xl backdrop-blur-xl sm:p-9">
 
-          <div className="mb-7 text-center">
+          {/* Heading */}
+          <div className="mb-6 text-center">
             <h1 className="text-2xl font-semibold">
               Create an Account
             </h1>
@@ -93,11 +123,60 @@ const SignUpPage = () => {
             </p>
           </div>
 
+          {/* Role Selection */}
+          <div className="mb-7">
+            <p className="mb-3 text-sm font-medium text-white/80">
+              Choose your account type
+            </p>
+
+            <div className="grid grid-cols-3 gap-2">
+              {roles.map((role) => {
+                const Icon = role.icon
+                const isSelected = selectedRole === role.value
+
+                return (
+                  <button
+                    key={role.value}
+                    type="button"
+                    onClick={() => {
+                      setSelectedRole(role.value)
+                      setError("")
+                    }}
+                    aria-pressed={isSelected}
+                    className={`flex min-w-0 flex-col items-center justify-center gap-2 rounded-xl border px-2 py-4 text-center transition-all ${
+                      isSelected
+                        ? "border-[#624BFF] bg-[#624BFF]/15 text-white shadow-[0_0_15px_rgba(98,75,255,0.12)]"
+                        : "border-white/10 bg-white/[0.03] text-white/50 hover:border-white/30 hover:bg-white/[0.06] hover:text-white"
+                    }`}
+                  >
+                    <Icon
+                      className={`size-5 ${
+                        isSelected ? "text-[#897aff]" : ""
+                      }`}
+                    />
+
+                    <span className="text-xs font-semibold sm:text-sm">
+                      {role.label}
+                    </span>
+
+                    <span className="text-[10px] text-white/40 sm:text-xs">
+                      {role.description}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Signup Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
 
             {/* Full Name */}
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium text-white/80">
+              <label
+                htmlFor="name"
+                className="text-sm font-medium text-white/80"
+              >
                 Full Name
               </label>
 
@@ -114,7 +193,10 @@ const SignUpPage = () => {
 
             {/* Email */}
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-white/80">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium text-white/80"
+              >
                 Email Address
               </label>
 
@@ -131,7 +213,10 @@ const SignUpPage = () => {
 
             {/* Password */}
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-white/80">
+              <label
+                htmlFor="password"
+                className="text-sm font-medium text-white/80"
+              >
                 Password
               </label>
 
@@ -164,7 +249,10 @@ const SignUpPage = () => {
 
             {/* Confirm Password */}
             <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium text-white/80">
+              <label
+                htmlFor="confirmPassword"
+                className="text-sm font-medium text-white/80"
+              >
                 Confirm Password
               </label>
 
@@ -182,8 +270,12 @@ const SignUpPage = () => {
 
                 <button
                   type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  onClick={() =>
+                    setShowConfirmPassword(!showConfirmPassword)
+                  }
+                  aria-label={
+                    showConfirmPassword ? "Hide password" : "Show password"
+                  }
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
                 >
                   {showConfirmPassword ? (
@@ -217,7 +309,6 @@ const SignUpPage = () => {
                 "Create Account"
               )}
             </button>
-
           </form>
 
           {/* Sign In Toggle */}
@@ -230,13 +321,12 @@ const SignUpPage = () => {
               Sign In
             </Link>
           </p>
-
         </div>
 
+        {/* Copyright */}
         <p className="mt-6 text-center text-xs text-white/30">
           © 2026 HireLoop. All rights reserved.
         </p>
-
       </div>
     </main>
   )

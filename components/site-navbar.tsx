@@ -1,8 +1,9 @@
+
 "use client"
 
 import Image from "next/image"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
@@ -14,8 +15,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+
 import { MenuIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { authClient } from "@/lib/auth-client"
 
 const navLinks = [
   { href: "/jobs", label: "Browse Jobs" },
@@ -73,24 +76,123 @@ function NavLinks({ className }: { className?: string }) {
   )
 }
 
-function AuthButtons() {
+function AuthButtons({ mobile = false }: { mobile?: boolean }) {
+  const router = useRouter()
+  const { data: session, isPending } = authClient.useSession()
+
+  const handleSignOut = async () => {
+    try {
+      const { error } = await authClient.signOut()
+
+      if (error) {
+        console.error("Sign Out Error:", error.message)
+        return
+      }
+
+      router.refresh()
+    } catch (err) {
+      console.error("Sign Out Error:", err)
+    }
+  }
+
+  if (isPending) {
+    return null
+  }
+
+  if (session?.user) {
+    return (
+      <div
+        className={
+          mobile
+            ? "flex flex-col gap-3"
+            : "flex items-center gap-3"
+        }
+      >
+        <p className="text-sm font-medium text-foreground">
+          Welcome, <span className="text-primary">{session.user.name}</span>
+        </p>
+
+        {mobile ? (
+          <SheetClose
+            render={
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full"
+                onClick={handleSignOut}
+              />
+            }
+          >
+            Sign Out
+          </SheetClose>
+        ) : (
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-10"
+            onClick={handleSignOut}
+          >
+            Sign Out
+          </Button>
+        )}
+      </div>
+    )
+  }
+
   return (
-    <div className="flex items-center gap-3">
-      <Button
-        variant="ghost"
-        size="lg"
-        className="h-10 text-primary hover:bg-primary/10"
-        render={<Link href="/signin" />}
-      >
-        Sign In
-      </Button>
-      <Button
-        size="lg"
-        className="h-10 rounded-full px-10 text-[15px]"
-        render={<Link href="/get-started" />}
-      >
-        Get Started
-      </Button>
+    <div
+      className={
+        mobile
+          ? "flex flex-col gap-3"
+          : "flex items-center gap-3"
+      }
+    >
+      {mobile ? (
+        <>
+          <SheetClose
+            render={
+              <Link
+                href="/sign-in"
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "lg" }),
+                  "w-full"
+                )}
+              />
+            }
+          >
+            Sign In
+          </SheetClose>
+
+          <Button
+            size="lg"
+            className="w-full rounded-full"
+            render={
+              <SheetClose render={<Link href="/sign-up" />} />
+            }
+          >
+            Get Started
+          </Button>
+        </>
+      ) : (
+        <>
+          <Button
+            variant="ghost"
+            size="lg"
+            className="h-10 text-primary hover:bg-primary/10"
+            render={<Link href="/sign-in" />}
+          >
+            Sign In
+          </Button>
+
+          <Button
+            size="lg"
+            className="h-10 rounded-full px-10 text-[15px]"
+            render={<Link href="/sign-up" />}
+          >
+            Get Started
+          </Button>
+        </>
+      )}
     </div>
   )
 }
@@ -101,11 +203,13 @@ export function SiteNavbar() {
       <div className="mx-auto flex h-16 w-full max-w-[1220px] items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
         <Logo />
 
+        {/* Desktop Navigation */}
         <div className="hidden items-center gap-8 md:flex">
           <NavLinks />
           <AuthButtons />
         </div>
 
+        {/* Mobile Navigation */}
         <Sheet>
           <SheetTrigger
             render={
@@ -119,29 +223,19 @@ export function SiteNavbar() {
           >
             <MenuIcon />
           </SheetTrigger>
+
           <SheetContent className="gap-0">
             <SheetHeader className="border-b py-5">
-              <SheetTitle className="sr-only">Navigation menu</SheetTitle>
+              <SheetTitle className="sr-only">
+                Navigation menu
+              </SheetTitle>
               <Logo />
             </SheetHeader>
+
             <MobileNavLinks />
+
             <SheetFooter className="border-t">
-              <Link
-                href="/signin"
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: "lg" }),
-                  "w-full"
-                )}
-              >
-                Sign In
-              </Link>
-              <Button
-                size="lg"
-                className="w-full rounded-full"
-                render={<SheetClose render={<Link href="/get-started" />} />}
-              >
-                Get Started
-              </Button>
+              <AuthButtons mobile />
             </SheetFooter>
           </SheetContent>
         </Sheet>
