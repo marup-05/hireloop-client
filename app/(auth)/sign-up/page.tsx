@@ -1,25 +1,67 @@
+
 "use client"
+
 import { useState, type FormEvent } from "react"
 import Link from "next/link"
-import { Eye, EyeOff, BriefcaseBusiness } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Eye, EyeOff, BriefcaseBusiness, Loader2 } from "lucide-react"
+
+// তোমার Better Auth client import
+import { authClient } from "@/lib/auth-client"
 
 const SignUpPage = () => {
+  const router = useRouter()
+
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    setError("")
 
     const formData = new FormData(event.currentTarget)
 
-    const userData = {
-      name: formData.get("name"),
-      email: formData.get("email"),
-      password: formData.get("password"),
-      confirmPassword: formData.get("confirmPassword"),
+    const name = formData.get("name") as string
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
+    const confirmPassword = formData.get("confirmPassword") as string
+
+    // Check whether passwords match
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.")
+      return
     }
 
-    console.log("Sign Up Data:", userData)
+    try {
+      setIsLoading(true)
+
+      // Better Auth email signup
+      const { data, error } = await authClient.signUp.email({
+        name,
+        email,
+        password,
+        callbackURL: "/",
+      })
+
+      if (error) {
+        setError(error.message || "Something went wrong. Please try again.")
+        return
+      }
+
+      if (data) {
+        // Registration successful
+        router.push("/")
+        router.refresh()
+      }
+    } catch (err) {
+      console.error("Sign Up Error:", err)
+      setError("Something went wrong. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -153,12 +195,27 @@ const SignUpPage = () => {
               </div>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <p className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                {error}
+              </p>
+            )}
+
             {/* Submit */}
             <button
               type="submit"
-              className="h-12 w-full rounded-lg bg-[#624BFF] text-sm font-semibold text-white transition-all hover:bg-[#7865ff] hover:shadow-[0_0_20px_rgba(98,75,255,0.3)]"
+              disabled={isLoading}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#624BFF] text-sm font-semibold text-white transition-all hover:bg-[#7865ff] hover:shadow-[0_0_20px_rgba(98,75,255,0.3)] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Create Account
+              {isLoading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                "Create Account"
+              )}
             </button>
 
           </form>
