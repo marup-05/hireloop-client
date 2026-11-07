@@ -1,24 +1,62 @@
-
 "use client"
 
 import { useState, type FormEvent } from "react"
 import Link from "next/link"
-import { Eye, EyeOff, BriefcaseBusiness } from "lucide-react"
+import { useRouter } from "next/navigation"
+import {
+  Eye,
+  EyeOff,
+  BriefcaseBusiness,
+  Loader2,
+} from "lucide-react"
+
+import { authClient } from "@/lib/auth-client"
 
 const SignInPage = () => {
-  const [showPassword, setShowPassword] = useState(false)
+  const router = useRouter()
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    setError("")
 
     const formData = new FormData(event.currentTarget)
 
-    const userData = {
-      email: formData.get("email"),
-      password: formData.get("password"),
-    }
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
 
-    console.log("Sign In Data:", userData)
+    try {
+      setIsLoading(true)
+
+      // Better Auth Email Sign In
+      const { data, error } = await authClient.signIn.email({
+        email,
+        password,
+        callbackURL: "/",
+      })
+
+      // Handle login error
+      if (error) {
+        setError(error.message || "Invalid email or password.")
+        return
+      }
+
+      // Login successful
+      if (data) {
+        router.push("/")
+        router.refresh()
+      }
+
+    } catch (err) {
+      console.error("Sign In Error:", err)
+      setError("Something went wrong. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -32,6 +70,7 @@ const SignInPage = () => {
         {/* Logo */}
         <Link href="/" className="mb-8 flex items-center justify-center gap-2">
           <BriefcaseBusiness className="size-7 text-[#7865ff]" />
+
           <span className="text-2xl font-bold tracking-tight">
             Hire<span className="text-[#7865ff]">Loop</span>
           </span>
@@ -54,7 +93,10 @@ const SignInPage = () => {
 
             {/* Email */}
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-white/80">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium text-white/80"
+              >
                 Email Address
               </label>
 
@@ -71,15 +113,21 @@ const SignInPage = () => {
 
             {/* Password */}
             <div className="space-y-2">
+
               <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-sm font-medium text-white/80">
+                <label
+                  htmlFor="password"
+                  className="text-sm font-medium text-white/80"
+                >
                   Password
                 </label>
 
                 <button
                   type="button"
                   className="text-xs text-[#897aff] transition-colors hover:text-white"
-                  onClick={() => alert("Forgot password functionality will be added later.")}
+                  onClick={() =>
+                    alert("Forgot password functionality will be added later.")
+                  }
                 >
                   Forgot Password?
                 </button>
@@ -109,14 +157,30 @@ const SignInPage = () => {
                   )}
                 </button>
               </div>
+
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <p className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                {error}
+              </p>
+            )}
 
             {/* Submit */}
             <button
               type="submit"
-              className="h-12 w-full rounded-lg bg-[#624BFF] text-sm font-semibold text-white transition-all hover:bg-[#7865ff] hover:shadow-[0_0_20px_rgba(98,75,255,0.3)]"
+              disabled={isLoading}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#624BFF] text-sm font-semibold text-white transition-all hover:bg-[#7865ff] hover:shadow-[0_0_20px_rgba(98,75,255,0.3)] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Sign In
+              {isLoading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Signing In...
+                </>
+              ) : (
+                "Sign In"
+              )}
             </button>
 
           </form>
@@ -124,6 +188,7 @@ const SignInPage = () => {
           {/* Sign Up Toggle */}
           <p className="mt-7 text-center text-sm text-white/50">
             Don't have an account?{" "}
+
             <Link
               href="/sign-up"
               className="font-semibold text-[#897aff] transition-colors hover:text-white"
