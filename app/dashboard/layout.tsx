@@ -1,14 +1,17 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { DashboardSidebar } from "../components/DashboardSidebar";
+import { Toaster } from "@/components/ui/toast";
+
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider>
       <DashboardSidebar />
-      <main>
+      <main className="w-full min-w-0 flex-1">
         <SidebarTrigger />
         {children}
       </main>
+      <Toaster />
     </SidebarProvider>
   )
 };

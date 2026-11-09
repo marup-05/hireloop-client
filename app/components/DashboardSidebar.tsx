@@ -12,12 +12,12 @@ import {
 import { useSession } from "@/lib/auth-client"
 import {
   Bookmark,
-  Briefcase,       
+  Briefcase,
   Building2,
   FileText,
   LayoutDashboard,
-  PlusCircle,
   Settings,
+  SquarePlus,
   Users,
   Wallet,
   type LucideIcon,
@@ -36,7 +36,7 @@ type MenuItem = {
 
 // Menu structure mirrors the "Hireloop 2.0" Figma sidebar (Nav frame) per role:
 // - Seeker:    Dashboard, Jobs, Saved Jobs, Applications, Billing,  Settings
-// - Recruiter: Dashboard, My Company, Manage Jobs, Applications,       Settings
+// - Recruiter: Dashboard, Add Job, Manage Jobs, Applications,          Settings
 // - Admin:     Dashboard, Users, Companies, Jobs, Payments,            Settings
 const menuItemByRole: Record<DashboardRole, MenuItem[]> = {
   seeker: [
@@ -49,9 +49,8 @@ const menuItemByRole: Record<DashboardRole, MenuItem[]> = {
   ],
   recruiter: [
     { id: "dashboard", name: "Dashboard", icon: LayoutDashboard, url: "/dashboard/recruiter" },
-    { id: "my-company", name: "My Company", icon: Building2, url: "/dashboard/recruiter/company" },
+    { id: "add-job", name: "Add Job", icon: SquarePlus, url: "/dashboard/recruiter/jobs/new" },
     { id: "manage-jobs", name: "Manage Jobs", icon: Briefcase, url: "/dashboard/recruiter/jobs" },
-    { id: "add-job", name: "Add Job", icon: PlusCircle, url: "/dashboard/recruiter/jobs/new" },
     { id: "applications", name: "Applications", icon: FileText, url: "/dashboard/recruiter/applications" },
     { id: "settings", name: "Settings", icon: Settings, url: "/dashboard/recruiter/settings" },
   ],
