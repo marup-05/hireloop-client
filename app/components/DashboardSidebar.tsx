@@ -16,11 +16,13 @@ import {
   Building2,
   FileText,
   LayoutDashboard,
+  PlusCircle,
   Settings,
   Users,
   Wallet,
   type LucideIcon,
 } from "lucide-react"
+import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 type DashboardRole = "seeker" | "recruiter" | "admin"
@@ -49,6 +51,7 @@ const menuItemByRole: Record<DashboardRole, MenuItem[]> = {
     { id: "dashboard", name: "Dashboard", icon: LayoutDashboard, url: "/dashboard/recruiter" },
     { id: "my-company", name: "My Company", icon: Building2, url: "/dashboard/recruiter/company" },
     { id: "manage-jobs", name: "Manage Jobs", icon: Briefcase, url: "/dashboard/recruiter/jobs" },
+    { id: "add-job", name: "Add Job", icon: PlusCircle, url: "/dashboard/recruiter/jobs/new" },
     { id: "applications", name: "Applications", icon: FileText, url: "/dashboard/recruiter/applications" },
     { id: "settings", name: "Settings", icon: Settings, url: "/dashboard/recruiter/settings" },
   ],
@@ -84,7 +87,7 @@ export function DashboardSidebar() {
               <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton
                   render={
-                    <a href={item.url} />
+                    <Link href={item.url} />
                   }
                   isActive={pathname === item.url}
                 >

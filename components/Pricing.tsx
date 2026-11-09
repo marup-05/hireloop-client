@@ -54,7 +54,7 @@ export default function Pricing() {
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
 
   return (
-    <section className="bg-black px-5 py-20 text-white sm:px-8 lg:px-12">
+    <section id="pricing" className="bg-black px-5 py-20 text-white sm:px-8 lg:px-12">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 text-center">
           <div className="mb-3 flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-gray-400">

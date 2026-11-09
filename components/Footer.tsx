@@ -102,7 +102,7 @@ const Footer = () => {
             </Link>
 
             <Link
-              href="/pricing"
+              href="#pricing"
               className="rounded-lg border border-white/15 bg-white/[0.04] px-5 py-3 text-[11px] font-medium text-white transition-colors hover:bg-white/10"
             >
               View pricing

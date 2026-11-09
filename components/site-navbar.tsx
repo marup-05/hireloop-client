@@ -20,12 +20,6 @@ import { MenuIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { authClient } from "@/lib/auth-client"
 
-const navLinks = [
-  { href: "/jobs", label: "Browse Jobs" },
-  { href: "/company", label: "Company" },
-  { href: "/pricing", label: "Pricing" },
-]
-
 function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href)
 }
@@ -51,6 +45,21 @@ function Logo() {
 
 function NavLinks({ className }: { className?: string }) {
   const pathname = usePathname()
+  const { data: session } = authClient.useSession()
+
+  const navLinks = [
+    { href: "/jobs", label: "Browse Jobs" },
+    { href: "/company", label: "Company" },
+    { href: "/pricing", label: "Pricing" },
+    ...(session?.user
+      ? [
+          {
+            href: `/dashboard/${session.user.role || "seeker"}`,
+            label: "Dashboard",
+          },
+        ]
+      : []),
+  ]
 
   return (
     <nav aria-label="Main navigation" className={className}>
@@ -246,6 +255,21 @@ export function SiteNavbar() {
 
 function MobileNavLinks() {
   const pathname = usePathname()
+  const { data: session } = authClient.useSession()
+
+  const navLinks = [
+    { href: "/jobs", label: "Browse Jobs" },
+    { href: "/company", label: "Company" },
+    { href: "/pricing", label: "Pricing" },
+    ...(session?.user
+      ? [
+          {
+            href: `/dashboard/${session.user.role || "seeker"}`,
+            label: "Dashboard",
+          },
+        ]
+      : []),
+  ]
 
   return (
     <nav aria-label="Mobile navigation" className="p-4">

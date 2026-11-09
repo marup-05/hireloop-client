@@ -1,21 +1,29 @@
-import { Geist, Geist_Mono } from "next/font/google"
 
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 
-import { cn } from "@/lib/utils"
+import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
+import { cn } from "@/lib/utils";
+
+export const metadata: Metadata = {
+  title: "HireLoop | Find Your Next Career",
+  description:
+    "The AI-native career platform. Find your next opportunity with HireLoop.",
+};
+
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
-})
+});
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html
@@ -34,5 +42,5 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
