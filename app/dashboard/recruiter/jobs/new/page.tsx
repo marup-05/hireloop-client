@@ -11,6 +11,7 @@ import {
   MapPin,
   Send,
 } from "lucide-react"
+import { createJob } from "@/lib/actions/jobs"
 
 // Exact tokens from the Figma "Add New Job" frame
 const c = {
@@ -20,7 +21,7 @@ const c = {
 }
 
 // One flat object holds the whole form — simple to collect and send.
-type NewJob = {
+export type NewJob = {
   title: string
   company: string
   category: string
@@ -73,10 +74,13 @@ const NewJobPage = () => {
     setJob((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     // TODO: send `job` to the backend
     console.log(job)
+
+    const result = await createJob(job)
+    console.log('result', result);
   }
 
   return (
