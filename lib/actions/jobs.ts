@@ -13,6 +13,21 @@ export const createJob = async (data: NewJob) =>{
     return res.json()
 }
 
+export const getJobById = async(jobId: string) =>{
+    const res = await fetch(`${BASE_URL}/jobs/${jobId}`)
+    return res.json()
+}
+
+export const updateJob = async(jobId: string, data: NewJob) =>{
+    const res = await fetch(`${BASE_URL}/jobs/${jobId}`, {
+        method: 'PATCH',
+        headers: {
+            'content-type' : 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    return res.json()
+}
 
 export const deleteJob = async(jobId: string) =>{
     const res = await fetch(`${BASE_URL}/jobs/${jobId}`, {

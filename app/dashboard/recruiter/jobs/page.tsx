@@ -254,7 +254,7 @@ const ManageJobPage = async () => {
                     <td className="p-2 sm:p-3">
                       <div className="flex flex-nowrap items-center justify-end gap-1">
                         <a
-                          href="/dashboard/recruiter/jobs/new"
+                          href={`/dashboard/recruiter/jobs/${job._id}/edit`}
                           aria-label="Update job"
                           className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-[#5c53fe]/20 px-2 text-[10px] leading-5 font-medium text-[#c3c0ff] outline-none hover:bg-[#5c53fe]/30 sm:px-3 sm:text-xs"
                         >
@@ -262,13 +262,13 @@ const ManageJobPage = async () => {
                           <span className="hidden lg:inline">Update</span>
                         </a>
 
-                        <button
-                          type="button"
+                        <a
+                          href={`/dashboard/recruiter/jobs/${job._id}`}
                           aria-label="View job"
                           className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#1f1f1f] outline-none hover:bg-[#232327]"
                         >
                           <Eye className="size-4 text-[#a0a0ab]" strokeWidth={2} />
-                        </button>
+                        </a>
 
                         <DeleteJobDialog job={job}></DeleteJobDialog>
                       </div>

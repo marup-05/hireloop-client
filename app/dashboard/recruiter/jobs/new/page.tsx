@@ -1,6 +1,9 @@
+
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import {
   Building2,
   Calendar,
@@ -20,7 +23,7 @@ const c = {
   hint: "text-[12px] font-medium leading-4 text-[#5a5a60]",
 }
 
-// One flat object holds the whole form — simple to collect and send.
+// One flat object holds the whole form.
 export type NewJob = {
   title: string
   company: string
@@ -34,6 +37,8 @@ export type NewJob = {
   salaryFrequency: string
   responsibilities: string
   qualifications: string
+  applicants: number
+  status: string
 }
 
 const initialJob: NewJob = {
@@ -49,9 +54,12 @@ const initialJob: NewJob = {
   salaryFrequency: "",
   responsibilities: "",
   qualifications: "",
+  applicants: 0,
+  status: "Active",
 }
 
 const jobTypes = ["Full-time", "Part-time", "Contract", "Internship"]
+
 const categories = [
   "Engineering & Tech",
   "Design & Creative",
@@ -60,27 +68,65 @@ const categories = [
   "Finance",
   "Customer Support",
 ]
-const salaryFrequencies = ["per hour", "per day", "per week", "per month", "per year"]
+
+const salaryFrequencies = [
+  "per hour",
+  "per day",
+  "per week",
+  "per month",
+  "per year",
+]
 
 const inputClass =
   "h-11 w-full rounded-[12px] bg-[#1e1e21] text-sm leading-[17px] text-white outline-none placeholder:text-[#5a5a60]"
 
 const NewJobPage = () => {
+  const router = useRouter()
+
   const [job, setJob] = useState<NewJob>(initialJob)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
-    setJob((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    setJob((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }))
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    // TODO: send `job` to the backend
-    console.log(job)
 
-    const result = await createJob(job)
-    console.log('result', result);
+    if (isSubmitting) return
+
+    try {
+      setIsSubmitting(true)
+
+      const result = await createJob(job)
+
+      if (result.acknowledged) {
+        toast.success("Job published successfully!", {
+          description: "Your new job has been added successfully.",
+        })
+
+        router.push("/dashboard/recruiter/jobs")
+      } else {
+        toast.error("Job publication failed!", {
+          description: "Could not publish this job. Please try again.",
+        })
+      }
+    } catch (error) {
+      console.error("Job creation error:", error)
+
+      toast.error("Job publication failed!", {
+        description: "Something went wrong. Please try again.",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -95,14 +141,21 @@ const NewJobPage = () => {
             >
               Manage Jobs
             </a>
-            <ChevronRight className="h-3 w-[7.5px] text-[#5a5a60]" strokeWidth={2} />
+
+            <ChevronRight
+              className="h-3 w-[7.5px] text-[#5a5a60]"
+              strokeWidth={2}
+            />
+
             <span className="text-[12px] leading-4 font-medium text-[#c3c0ff]">
               Create New Listing
             </span>
           </div>
+
           <h1 className="mt-1 text-[32px] leading-[42px] font-medium tracking-[-0.8px] text-white">
             Post a New Job
           </h1>
+
           <p className="mt-1 text-[13px] leading-5 text-[#a0a0ab]">
             Fill in the position specifications to attract qualified talent across our network.
           </p>
@@ -113,6 +166,7 @@ const NewJobPage = () => {
           <section className="rounded-[16px] bg-[#151516] p-6">
             <div className="flex items-center gap-2">
               <span className="size-2 rounded-full bg-[#5c53fe]" />
+
               <h2 className="text-base leading-6 font-medium text-white">
                 1. Basic Information
               </h2>
@@ -123,6 +177,7 @@ const NewJobPage = () => {
                 <label htmlFor="title" className={c.label}>
                   Job Title *
                 </label>
+
                 <input
                   id="title"
                   name="title"
@@ -139,11 +194,13 @@ const NewJobPage = () => {
                   <label htmlFor="company" className={c.label}>
                     Company Name *
                   </label>
+
                   <div className="relative mt-1">
                     <Building2
                       className="pointer-events-none absolute top-1/2 left-[14px] size-5 -translate-y-1/2 text-[#a0a0ab]"
                       strokeWidth={2}
                     />
+
                     <input
                       id="company"
                       name="company"
@@ -160,6 +217,7 @@ const NewJobPage = () => {
                   <label htmlFor="category" className={c.label}>
                     Job Category *
                   </label>
+
                   <div className="relative mt-1">
                     <select
                       id="category"
@@ -172,12 +230,18 @@ const NewJobPage = () => {
                       <option value="" disabled hidden>
                         Engineering & Tech
                       </option>
+
                       {categories.map((cat) => (
-                        <option key={cat} value={cat} className="bg-[#1e1e21] text-white">
+                        <option
+                          key={cat}
+                          value={cat}
+                          className="bg-[#1e1e21] text-white"
+                        >
                           {cat}
                         </option>
                       ))}
                     </select>
+
                     <ChevronDown
                       className="pointer-events-none absolute top-1/2 right-3 h-3 w-3 -translate-y-1/2 text-[#a0a0ab]"
                       strokeWidth={2.5}
@@ -188,12 +252,18 @@ const NewJobPage = () => {
 
               <div>
                 <label className={c.label}>Job Type *</label>
+
                 <div className="mt-1 grid grid-cols-2 gap-1 md:grid-cols-4">
                   {jobTypes.map((type) => (
                     <button
                       key={type}
                       type="button"
-                      onClick={() => setJob((prev) => ({ ...prev, jobType: type }))}
+                      onClick={() =>
+                        setJob((prev) => ({
+                          ...prev,
+                          jobType: type,
+                        }))
+                      }
                       className={`h-11 rounded-[12px] text-sm leading-[18px] outline-none ${
                         job.jobType === type
                           ? "border border-[#5c53fe] bg-[#232327] font-medium text-white"
@@ -212,33 +282,41 @@ const NewJobPage = () => {
           <section className="rounded-[16px] bg-[#151516] p-6">
             <div className="flex items-center gap-2">
               <span className="size-2 rounded-full bg-[#5c53fe]" />
+
               <h2 className="text-base leading-6 font-medium text-white">
                 2. Location, Compensation &amp; Timeline
               </h2>
             </div>
 
             <div className="mt-5 space-y-4">
-              {/* Remote Work Allowed (isRemote) */}
+              {/* Remote Work Allowed */}
               <div className="flex items-center justify-between gap-3 rounded-[12px] border border-[#232327] bg-[#1e1e21] p-[13px]">
                 <div className="flex min-w-0 items-center gap-[10px]">
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#232327]">
-                    <Globe className="size-5 text-[#c3c0ff]" strokeWidth={2} />
+                    <Globe
+                      className="size-5 text-[#c3c0ff]"
+                      strokeWidth={2}
+                    />
                   </span>
+
                   <div>
                     <p className="text-sm leading-[18px] font-medium text-white">
                       Remote Work Allowed (isRemote)
                     </p>
+
                     <p className="mt-[2px] text-[13px] leading-5 text-[#a0a0ab]">
                       Enable worldwide or distributed candidate applications
                     </p>
                   </div>
                 </div>
 
-                {/* Fixed toggle button */}
                 <button
                   type="button"
                   onClick={() =>
-                    setJob((prev) => ({ ...prev, isRemote: !prev.isRemote }))
+                    setJob((prev) => ({
+                      ...prev,
+                      isRemote: !prev.isRemote,
+                    }))
                   }
                   className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
                     job.isRemote ? "bg-[#5c53fe]" : "bg-[#1f1f1f]"
@@ -260,13 +338,16 @@ const NewJobPage = () => {
                     <label htmlFor="location" className={c.label}>
                       Job Location (location)
                     </label>
+
                     <span className={c.hint}>Required</span>
                   </div>
+
                   <div className="relative mt-1">
                     <MapPin
                       className="pointer-events-none absolute top-1/2 left-4 h-5 w-4 -translate-y-1/2 text-[#a0a0ab]"
                       strokeWidth={2}
                     />
+
                     <input
                       id="location"
                       name="location"
@@ -283,11 +364,13 @@ const NewJobPage = () => {
                   <label htmlFor="deadline" className={c.label}>
                     Application Deadline (deadline)
                   </label>
+
                   <div className="relative mt-1 [color-scheme:dark]">
                     <Calendar
                       className="pointer-events-none absolute top-1/2 left-[15px] h-5 w-[18px] -translate-y-1/2 text-[#a0a0ab]"
                       strokeWidth={2}
                     />
+
                     <input
                       id="deadline"
                       name="deadline"
@@ -306,11 +389,13 @@ const NewJobPage = () => {
                   <label htmlFor="minSalary" className={c.label}>
                     Min Salary / Rate
                   </label>
+
                   <div className="relative mt-1">
                     <DollarSign
                       className="pointer-events-none absolute top-1/2 left-[15px] size-[18px] -translate-y-1/2 text-[#a0a0ab]"
                       strokeWidth={2}
                     />
+
                     <input
                       id="minSalary"
                       name="minSalary"
@@ -328,11 +413,13 @@ const NewJobPage = () => {
                   <label htmlFor="maxSalary" className={c.label}>
                     Max Salary / Rate
                   </label>
+
                   <div className="relative mt-1">
                     <DollarSign
                       className="pointer-events-none absolute top-1/2 left-[15px] size-[18px] -translate-y-1/2 text-[#a0a0ab]"
                       strokeWidth={2}
                     />
+
                     <input
                       id="maxSalary"
                       name="maxSalary"
@@ -350,6 +437,7 @@ const NewJobPage = () => {
                   <label htmlFor="salaryFrequency" className={c.label}>
                     Frequency
                   </label>
+
                   <div className="relative mt-1">
                     <select
                       id="salaryFrequency"
@@ -362,12 +450,18 @@ const NewJobPage = () => {
                       <option value="" disabled hidden>
                         per hour
                       </option>
+
                       {salaryFrequencies.map((freq) => (
-                        <option key={freq} value={freq} className="bg-[#1e1e21] text-white">
+                        <option
+                          key={freq}
+                          value={freq}
+                          className="bg-[#1e1e21] text-white"
+                        >
                           {freq}
                         </option>
                       ))}
                     </select>
+
                     <ChevronDown
                       className="pointer-events-none absolute top-1/2 right-3 h-3 w-3 -translate-y-1/2 text-[#a0a0ab]"
                       strokeWidth={2.5}
@@ -382,6 +476,7 @@ const NewJobPage = () => {
           <section className="rounded-[16px] bg-[#151516] p-6">
             <div className="flex items-center gap-2">
               <span className="size-2 rounded-full bg-[#5c53fe]" />
+
               <h2 className="text-base leading-6 font-medium text-white">
                 3. Responsibilities &amp; Requirements
               </h2>
@@ -392,6 +487,7 @@ const NewJobPage = () => {
                 <label htmlFor="responsibilities" className={c.label}>
                   Key Responsibilities *
                 </label>
+
                 <textarea
                   id="responsibilities"
                   name="responsibilities"
@@ -407,6 +503,7 @@ const NewJobPage = () => {
                 <label htmlFor="qualifications" className={c.label}>
                   Qualifications &amp; Requirements *
                 </label>
+
                 <textarea
                   id="qualifications"
                   name="qualifications"
@@ -423,9 +520,11 @@ const NewJobPage = () => {
           {/* Bottom action */}
           <button
             type="submit"
-            className="inline-flex h-11 items-center gap-1 rounded-[12px] bg-[#5c53fe] px-6 text-sm leading-5 font-medium text-white shadow-[0_4px_6px_-4px_rgba(92,83,254,0.25),0_10px_15px_-3px_rgba(92,83,254,0.25)] active:translate-y-px outline-none"
+            disabled={isSubmitting}
+            className="inline-flex h-11 items-center gap-1 rounded-[12px] bg-[#5c53fe] px-6 text-sm leading-5 font-medium text-white shadow-[0_4px_6px_-4px_rgba(92,83,254,0.25),0_10px_15px_-3px_rgba(92,83,254,0.25)] active:translate-y-px outline-none disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Publish Job
+            {isSubmitting ? "Publishing..." : "Publish Job"}
+
             <Send className="size-4 text-white" strokeWidth={2} />
           </button>
         </form>
