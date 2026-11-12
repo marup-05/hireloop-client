@@ -15,6 +15,7 @@ import {
   Send,
 } from "lucide-react"
 import { createJob } from "@/lib/actions/jobs"
+import Link from "next/link"
 
 // Exact tokens from the Figma "Add New Job" frame
 const c = {
@@ -135,12 +136,12 @@ const NewJobPage = () => {
         {/* Top bar */}
         <div className="border-b border-[#2a2a2b] pt-6 pb-[25px]">
           <div className="flex items-center gap-2">
-            <a
+            <Link
               href="/dashboard/recruiter/jobs"
               className="text-[12px] leading-4 font-medium text-[#a0a0ab] hover:underline"
             >
               Manage Jobs
-            </a>
+            </Link>
 
             <ChevronRight
               className="h-3 w-[7.5px] text-[#5a5a60]"
