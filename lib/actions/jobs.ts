@@ -33,5 +33,5 @@ export const deleteJob = async(jobId: string) =>{
     const res = await fetch(`${BASE_URL}/jobs/${jobId}`, {
         method: 'DELETE'
     })
-    return res.json()
+    return res.json() 
 }

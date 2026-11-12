@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   Eye,
   EyeOff,
@@ -13,6 +13,8 @@ import {
 import { authClient } from "@/lib/auth-client"
 
 const SignInPage = () => {
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get("redirectTo") ?? "/"
   const router = useRouter()
 
   const [showPassword, setShowPassword] = useState(false)
@@ -36,7 +38,7 @@ const SignInPage = () => {
       const { data, error } = await authClient.signIn.email({
         email,
         password,
-        callbackURL: "/",
+        callbackURL: redirectTo, 
       })
 
       // Handle login error
