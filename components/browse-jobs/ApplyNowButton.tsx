@@ -1,6 +1,7 @@
+
 "use client"
 
-import { applyToJob } from "@/lib/api/applications"
+import { applyToJob, getMyApplicationsCount } from "@/lib/api/applications"
 import { useSession } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 
@@ -23,11 +24,25 @@ export function ApplyNowButton({
   const router = useRouter()
   const user = session?.user
 
-  const handleApply = async() => {
+  const handleApply = async () => {
     if (!user) {
       router.push(`/sign-in?redirectTo=/browse-jobs/${jobId}`)
       return
     } else if (user.role === "seeker") {
+
+      // Check user's total application count
+      const countResult = await getMyApplicationsCount(user.id)
+
+      // Show application count in console
+      console.log("User ID:", user.id)
+      console.log("Application Count:", countResult)
+
+      // Redirect to payment if application count is 6 or more
+      if (countResult >= 6) {
+        router.push("/payment")
+        return
+      }
+
       const application = {
         jobId,
         userId: user.id,
@@ -39,14 +54,16 @@ export function ApplyNowButton({
         appliedAt: new Date().toISOString(),
         status: "Applied" as const,
       }
+
       const result = await applyToJob(application)
-      if(result.insertedId) {
-        console.log('Application submitted successfully');
-        router.push('/browse-jobs')
+
+      if (result.insertedId) {
+        console.log("Application submitted successfully")
+        router.push("/browse-jobs")
       }
-    }
-    else{
-        console.log('user is not a job seeker');
+
+    } else {
+      console.log("user is not a job seeker")
     }
   }
 

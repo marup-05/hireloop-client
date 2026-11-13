@@ -1,4 +1,5 @@
 import Link from "next/link"
+import type { ReactNode } from "react"
 import { Banknote, Bookmark, BriefcaseBusiness } from "lucide-react"
 import type { NewJob } from "@/app/dashboard/recruiter/jobs/new/page"
 
@@ -10,14 +11,22 @@ const fmtSalary = (value: string) =>
 // `badge` is optional (Figma's "Easy Apply" green / "Hot Job" amber chip).
 // `href` makes the whole card a link to the job details page — the bookmark
 // button stays clickable on top of it.
+// `saveButton` swaps the inert bookmark for a functional one (used by the
+// Browse Jobs and Saved Jobs pages); `footer` adds an optional strip under
+// the chips (used by Saved Jobs for category + saved date). Both are
+// optional, so the Browse Jobs card design is unchanged.
 export function JobCard({
   job,
   badge,
   href,
+  saveButton,
+  footer,
 }: {
   job: NewJob
   badge?: { label: string; tone: "green" | "amber" }
   href?: string
+  saveButton?: ReactNode
+  footer?: ReactNode
 }) {
   const badgeColors =
     badge?.tone === "green"
@@ -53,14 +62,16 @@ export function JobCard({
               </p>
             </div>
 
-            <button
-              type="button"
-              aria-label="Save job"
-              onClick={() => {}}
-              className="relative z-10 flex size-10 shrink-0 items-center justify-center outline-none"
-            >
-              <Bookmark className="size-[18px] text-[#8e9192]" strokeWidth={2} />
-            </button>
+            {saveButton ?? (
+              <button
+                type="button"
+                aria-label="Save job"
+                onClick={() => {}}
+                className="relative z-10 flex size-10 shrink-0 items-center justify-center outline-none"
+              >
+                <Bookmark className="size-[18px] text-[#8e9192]" strokeWidth={2} />
+              </button>
+            )}
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
@@ -83,6 +94,8 @@ export function JobCard({
               </span>
             )}
           </div>
+
+          {footer}
         </div>
       </div>
     </article>

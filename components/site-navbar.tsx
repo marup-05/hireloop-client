@@ -48,7 +48,7 @@ function NavLinks({ className }: { className?: string }) {
   const { data: session } = authClient.useSession()
 
   const navLinks = [
-    { href: "/jobs", label: "Browse Jobs" },
+    { href: "/browse-jobs", label: "Browse Jobs" },
     { href: "/company", label: "Company" },
     { href: "/pricing", label: "Pricing" },
     ...(session?.user
@@ -258,7 +258,7 @@ function MobileNavLinks() {
   const { data: session } = authClient.useSession()
 
   const navLinks = [
-    { href: "/jobs", label: "Browse Jobs" },
+    { href: "/browse-jobs", label: "Browse Jobs" },
     { href: "/company", label: "Company" },
     { href: "/pricing", label: "Pricing" },
     ...(session?.user

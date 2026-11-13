@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Select } from "@/components/ui/select"
 import { JobSearchBar } from "@/components/browse-jobs/JobSearchBar"
 import {
@@ -8,7 +8,13 @@ import {
   type FilterGroup,
 } from "@/components/browse-jobs/JobFilterSidebar"
 import { JobCard } from "@/components/browse-jobs/JobCard"
+import { SaveJobButton } from "@/components/browse-jobs/SaveJobButton"
+import { useSession } from "@/lib/auth-client"
+import { getSavedJobs } from "@/lib/api/saved-jobs"
 import type { JobRow } from "@/app/dashboard/recruiter/jobs/page"
+
+// Stable empty set for the signed-out state (never triggers re-renders)
+const NO_SAVED_JOBS = new Set<string>()
 
 // Job Type and Job Category filters
 const groups: FilterGroup[] = [
@@ -61,6 +67,51 @@ const groups: FilterGroup[] = [
 // Browse Jobs view
 export default function BrowseJobsView({ jobs }: { jobs: JobRow[] }) {
   const [sort, setSort] = useState("Most Recent")
+  const { data: session, isPending } = useSession()
+
+  // Saved job ids — seeded from the backend on page load so the Saved state
+  // is correct after a refresh, then kept in sync by the save buttons.
+  // While signed out (or while the session is loading) nothing counts as
+  // saved; signing in re-fetches the list.
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    const userId = session?.user?.id
+
+    if (isPending || !userId) return
+
+    let active = true
+
+    getSavedJobs(userId)
+      .then((savedJobs) => {
+        if (active) {
+          setSavedIds(new Set(savedJobs.map((saved) => saved.jobId)))
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to load saved jobs:", error)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [isPending, session?.user?.id])
+
+  const savedSet = session?.user?.id ? savedIds : NO_SAVED_JOBS
+
+  const handleSavedChange = (jobId: string, saved: boolean) => {
+    setSavedIds((prev) => {
+      const next = new Set(prev)
+
+      if (saved) {
+        next.add(jobId)
+      } else {
+        next.delete(jobId)
+      }
+
+      return next
+    })
+  }
 
   return (
     <div className="mx-auto w-full max-w-[1280px] px-4 pt-4 pb-16 sm:px-6 lg:px-8">
@@ -102,7 +153,18 @@ export default function BrowseJobsView({ jobs }: { jobs: JobRow[] }) {
 
           <div className="mt-6 space-y-3">
             {jobs.map((job) => (
-              <JobCard key={job._id} job={job} href={`/browse-jobs/${job._id}`} />
+              <JobCard
+                key={job._id}
+                job={job}
+                href={`/browse-jobs/${job._id}`}
+                saveButton={
+                  <SaveJobButton
+                    jobId={job._id}
+                    saved={savedSet.has(job._id)}
+                    onChanged={(saved) => handleSavedChange(job._id, saved)}
+                  />
+                }
+              />
             ))}
           </div>
         </section>

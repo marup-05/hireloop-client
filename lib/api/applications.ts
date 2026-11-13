@@ -1,14 +1,10 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
 
-// Fields decided from the "Seeker / My Applications" page — it shows the job
-// title, company, job type + workplace, when it was applied and its status.
+// Application status
 export type ApplicationStatus =
-  | "Applied"
-  | "Review"
-  | "Shortlisted"
-  | "Rejected"
-  | "Offered"
+  "Applied" | "Review" | "Shortlisted" | "Rejected" | "Offered"
 
+// Application data type
 export type ApplicationData = {
   jobId: string
   userId: string
@@ -16,16 +12,17 @@ export type ApplicationData = {
   jobTitle: string
   companyName: string
   jobType: string
-  /** "Remote" | "On-site" (later also "Hybrid") — derived from the job */
   workplace: string
-  /** ISO date string captured at apply time */
   appliedAt: string
   status: ApplicationStatus
 }
 
-// A stored application document (with its MongoDB id)
-export type Application = ApplicationData & { _id: string }
+// Stored application with MongoDB ID
+export type Application = ApplicationData & {
+  _id: string
+}
 
+// Apply for a job
 export const applyToJob = async (data: ApplicationData) => {
   const res = await fetch(`${BASE_URL}/applications`, {
     method: "POST",
@@ -40,4 +37,42 @@ export const applyToJob = async (data: ApplicationData) => {
   }
 
   return res.json()
+}
+
+// Get applications of a specific user
+export const getMyApplications = async (
+  userId: string
+): Promise<Application[]> => {
+  const res = await fetch(
+    `${BASE_URL}/applications?applicantId=${encodeURIComponent(userId)}`,
+    {
+      cache: "no-store",
+    }
+  )
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch applications")
+  }
+
+  return res.json()
+}
+
+// Get total application count of a specific user
+export const getMyApplicationsCount = async (
+  userId: string
+): Promise<number> => {
+  const res = await fetch(
+    `${BASE_URL}/applications/count?applicantId=${encodeURIComponent(userId)}`,
+    {
+      cache: "no-store",
+    }
+  )
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch applications count")
+  }
+
+  const data: { count: number } = await res.json()
+
+  return data.count
 }
