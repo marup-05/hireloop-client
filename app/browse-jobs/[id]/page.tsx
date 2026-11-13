@@ -208,6 +208,8 @@ const JobDetails = ({ job }: { job: JobRow }) => {
               jobId={String(job._id)}
               jobTitle={job.title}
               companyName={job.company}
+              jobType={job.jobType}
+              isRemote={job.isRemote}
             />
           </div>
         </div>

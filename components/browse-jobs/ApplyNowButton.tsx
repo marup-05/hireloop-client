@@ -8,12 +8,16 @@ type ApplyNowButtonProps = {
   jobId: string
   jobTitle: string
   companyName: string
+  jobType: string
+  isRemote: boolean
 }
 
 export function ApplyNowButton({
   jobId,
   jobTitle,
   companyName,
+  jobType,
+  isRemote,
 }: ApplyNowButtonProps) {
   const { data: session } = useSession()
   const router = useRouter()
@@ -30,6 +34,10 @@ export function ApplyNowButton({
         email: user.email,
         jobTitle,
         companyName,
+        jobType,
+        workplace: isRemote ? "Remote" : "On-site",
+        appliedAt: new Date().toISOString(),
+        status: "Applied" as const,
       }
       const result = await applyToJob(application)
       if(result.insertedId) {
