@@ -57,6 +57,24 @@ export const getMyApplications = async (
   return res.json()
 }
 
+// Get all applications submitted for a specific job (recruiter review view)
+export const getJobApplications = async (
+  jobId: string
+): Promise<Application[]> => {
+  const res = await fetch(
+    `${BASE_URL}/applications?jobId=${encodeURIComponent(jobId)}`,
+    {
+      cache: "no-store",
+    }
+  )
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch job applications")
+  }
+
+  return res.json()
+}
+
 // Get total application count of a specific user
 export const getMyApplicationsCount = async (
   userId: string

@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import type { NewJob } from "@/app/dashboard/recruiter/jobs/new/page"
 import { getJobById } from "@/lib/actions/jobs"
+import Link from "next/link"
 
 const c = {
   label: "text-[14px] font-medium leading-[18px] text-[#f4f4f5]",
@@ -49,12 +50,12 @@ const ViewJobPage = () => {
       <div className="mx-auto max-w-[984px] px-6 pt-16 pb-5">
         <div className="border-b border-[#2a2a2b] pt-6 pb-[25px]">
           <div className="flex items-center gap-2">
-            <a
+            <Link
               href="/dashboard/recruiter/jobs"
               className="text-[12px] leading-4 font-medium text-[#a0a0ab] hover:underline"
             >
               Manage Jobs
-            </a>
+            </Link>
             <ChevronRight className="h-3 w-[7.5px] text-[#5a5a60]" strokeWidth={2} />
             <span className="text-[12px] leading-4 font-medium text-[#c3c0ff]">
               View Job
@@ -228,12 +229,12 @@ const ViewJobPage = () => {
             </div>
           </section>
 
-          <a
+          <Link
             href="/dashboard/recruiter/jobs"
             className="inline-flex h-11 items-center rounded-[12px] bg-[#5c53fe] px-6 text-sm font-medium text-white"
           >
             Back to Manage Jobs
-          </a>
+          </Link>
         </div>
       </div>
     </div>

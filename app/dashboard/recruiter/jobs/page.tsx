@@ -2,7 +2,6 @@
 import {
   Briefcase,
   ChevronRight,
-  EllipsisVertical,
   Eye,
   MapPin,
   Plus,
@@ -11,11 +10,17 @@ import {
 } from "lucide-react"
 import type { NewJob } from "@/app/dashboard/recruiter/jobs/new/page"
 import { getJobs } from "@/lib/api/jobs"
-import { DeleteJobDialog } from "@/app/components/DeleteJobDialog";
+import { DeleteJobDialog } from "@/app/components/DeleteJobDialog"
+import Link from "next/link"
+import { getSession } from "@/lib/core/server"
 
-// Table rows = the exact NewJob shape stored by the new jobs page,
-// plus a couple of list-only display fields (applicants, postedAgo).
-export type JobRow = NewJob & { applicants: number; postedAgo: string; _id: string}
+// Table rows = NewJob shape + list-only fields
+export type JobRow = NewJob & {
+  applicants: number
+  postedAgo: string
+  _id: string
+  recruiterId: string
+}
 
 const categoryMeta: Record<string, { label: string; color: string }> = {
   Engineering: { label: "Engineering", color: "#38bdf8" },
@@ -50,20 +55,32 @@ const fmtDeadline = (d: string) =>
 
 const isExpired = (job: JobRow) => new Date(job.deadline) < new Date()
 
-const ApplicantsCell = ({ count }: { count: number }) => {
+// Applicants cell — links to the job's applications review page
+const ApplicantsCell = ({
+  count,
+  jobId,
+}: {
+  count: number
+  jobId: string
+}) => {
   const accents = ["#c3c0ff", "#d4d4d8"]
   const color = accents[count % 2]
 
   return (
-    <div className="flex min-w-0 items-center gap-1.5">
+    <Link
+      href={`/dashboard/recruiter/jobs/${jobId}/applications`}
+      title="View applications"
+      className="group flex min-w-0 items-center gap-1.5 outline-none"
+    >
       <Users className="size-4 shrink-0" style={{ color }} strokeWidth={2} />
+
       <span
-        className="truncate text-[13px] leading-5 font-semibold"
+        className="truncate text-[13px] leading-5 font-semibold group-hover:underline"
         style={{ color }}
       >
         {count} Candidates
       </span>
-    </div>
+    </Link>
   )
 }
 
@@ -85,8 +102,17 @@ const StatusCell = ({ active }: { active: boolean }) => (
 )
 
 const ManageJobPage = async () => {
-  const jobs = await getJobs()
-  console.log("jobs data", jobs)
+  const session = await getSession()
+
+  const recruiterId = session?.user?.id
+
+  console.log("Logged in recruiter ID:", recruiterId)
+
+  const jobs = recruiterId
+    ? await getJobs("", recruiterId)
+    : []
+
+  console.log("Filtered recruiter jobs:", jobs)
 
   return (
     <div className="min-h-screen w-full min-w-0 bg-[#131314]">
@@ -120,163 +146,179 @@ const ManageJobPage = async () => {
             </p>
           </div>
 
-          <a
+          <Link
             href="/dashboard/recruiter/jobs/new"
             className="inline-flex h-10 w-fit shrink-0 items-center gap-1 rounded-[12px] bg-[#5c53fe] px-5 text-sm leading-5 font-medium text-white shadow-[0_2px_4px_-2px_rgba(0,0,0,0.10),0_4px_6px_-1px_rgba(0,0,0,0.10)] outline-none active:translate-y-px"
           >
             <Plus className="size-3.5" strokeWidth={2.5} />
             New Job Post
-          </a>
+          </Link>
         </div>
 
         {/* Postings table */}
         <div className="mt-6 w-full min-w-0 overflow-hidden rounded-[16px] border border-[#232327] bg-[#151516] shadow-[0_8px_10px_-6px_rgba(0,0,0,0.10),0_20px_25px_-5px_rgba(0,0,0,0.10)]">
-          {/* Horizontal scroll on small screens — page itself never overflows */}
           <div className="w-full overflow-x-auto">
             <table className="w-full min-w-[1080px] table-fixed border-collapse text-left">
-            <colgroup>
-              <col className="w-[17%]" />
-              <col className="w-[14%]" />
-              <col className="w-[9%]" />
-              <col className="w-[13%]" />
-              <col className="w-[11%]" />
-              <col className="w-[9%]" />
-              <col className="w-[10%]" />
-              <col className="w-[17%]" />
-            </colgroup>
+              <colgroup>
+                <col className="w-[17%]" />
+                <col className="w-[14%]" />
+                <col className="w-[9%]" />
+                <col className="w-[13%]" />
+                <col className="w-[11%]" />
+                <col className="w-[9%]" />
+                <col className="w-[10%]" />
+                <col className="w-[17%]" />
+              </colgroup>
 
-            <thead>
-              <tr>
-                {[
-                  "JOB TITLE & DEPT",
-                  "COMPANY & LOCATION",
-                  "TYPE",
-                  "COMPENSATION",
-                  "APPLICANTS",
-                  "STATUS",
-                  "DEADLINE",
-                  "ACTIONS",
-                ].map((heading) => (
-                  <th
-                    key={heading}
-                    className="h-[50px] overflow-hidden border-b border-[#232327] bg-[#0b0b0c] px-2 text-[10px] leading-4 font-semibold tracking-wide whitespace-nowrap text-[#a0a0ab] text-ellipsis sm:px-3 sm:text-[11px]"
-                  >
-                    {heading}
-                  </th>
-                ))}
-              </tr>
-            </thead>
+              <thead>
+                <tr>
+                  {[
+                    "JOB TITLE & DEPT",
+                    "COMPANY & LOCATION",
+                    "TYPE",
+                    "COMPENSATION",
+                    "APPLICANTS",
+                    "STATUS",
+                    "DEADLINE",
+                    "ACTIONS",
+                  ].map((heading) => (
+                    <th
+                      key={heading}
+                      className="h-[50px] overflow-hidden border-b border-[#232327] bg-[#0b0b0c] px-2 text-[10px] leading-4 font-semibold tracking-wide whitespace-nowrap text-[#a0a0ab] text-ellipsis sm:px-3 sm:text-[11px]"
+                    >
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
 
-            <tbody>
-              {jobs.map((job: JobRow, index: number) => {
-                const expired = isExpired(job)
-                const { label: dept, color } = categoryInfo(job.category)
+              <tbody>
+                {jobs.map((job: JobRow, index: number) => {
+                  const expired = isExpired(job)
+                  const { label: dept, color } = categoryInfo(job.category)
 
-                return (
-                  <tr key={`${job.title}-${index}`} className="border-b border-[#232327]">
-                    {/* Job title & dept */}
-                    <td className="min-w-0 p-2 sm:p-3">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <span className="hidden size-9 shrink-0 items-center justify-center rounded-lg bg-[#232327] sm:flex">
-                          <Briefcase
-                            className="size-[18px]"
-                            style={{ color }}
+                  return (
+                    <tr
+                      key={`${job.title}-${index}`}
+                      className="border-b border-[#232327]"
+                    >
+                      {/* Job title & dept */}
+                      <td className="min-w-0 p-2 sm:p-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="hidden size-9 shrink-0 items-center justify-center rounded-lg bg-[#232327] sm:flex">
+                            <Briefcase
+                              className="size-[18px]"
+                              style={{ color }}
+                              strokeWidth={2}
+                            />
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-xs leading-5 font-semibold text-white sm:text-sm">
+                              {job.title}
+                            </p>
+                            <p
+                              className="truncate text-[10px] leading-5 font-medium sm:text-[11px]"
+                              style={{ color }}
+                            >
+                              {dept}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Company & location */}
+                      <td className="min-w-0 p-2 sm:p-3">
+                        <p className="truncate text-xs leading-5 font-medium text-white sm:text-[13px]">
+                          {job.company}
+                        </p>
+                        <p className="flex min-w-0 items-center gap-1 text-[10px] leading-5 text-[#a0a0ab] sm:text-xs">
+                          <MapPin
+                            className="size-3 shrink-0 sm:size-4"
                             strokeWidth={2}
                           />
+                          <span className="truncate">
+                            {job.isRemote
+                              ? `Remote (${job.location})`
+                              : job.location}
+                          </span>
+                        </p>
+                      </td>
+
+                      {/* Type */}
+                      <td className="p-2 sm:p-3">
+                        <span className="inline-flex max-w-full items-center rounded-full border border-[#232327] bg-[#1f1f1f] px-2 py-1 text-[10px] leading-4 font-medium whitespace-nowrap text-[#d4d4d8] sm:px-[11px] sm:text-[11px]">
+                          {job.jobType}
                         </span>
-                        <div className="min-w-0">
-                          <p className="truncate text-xs leading-5 font-semibold text-white sm:text-sm">
-                            {job.title}
-                          </p>
-                          <p
-                            className="truncate text-[10px] leading-5 font-medium sm:text-[11px]"
-                            style={{ color }}
+                      </td>
+
+                      {/* Compensation */}
+                      <td className="p-2 sm:p-3">
+                        <span className="block truncate text-[10px] leading-4 font-medium text-white sm:text-[13px] sm:leading-5">
+                          €{fmtSalary(job.minSalary)} – €{fmtSalary(job.maxSalary)} /{" "}
+                          {salaryUnit[job.salaryFrequency] ?? job.salaryFrequency}
+                        </span>
+                      </td>
+
+                      {/* Applicants — links to the applications review page */}
+                      <td className="p-2 sm:p-3">
+                        <ApplicantsCell
+                          count={job.applicants}
+                          jobId={job._id}
+                        />
+                      </td>
+
+                      {/* Status */}
+                      <td className="p-2 sm:p-3">
+                        <StatusCell active={!expired} />
+                      </td>
+
+                      {/* Deadline */}
+                      <td className="p-2 sm:p-3">
+                        <p
+                          className={`truncate text-[11px] leading-5 font-medium sm:text-[13px] ${
+                            expired ? "text-[#a0a0ab]" : "text-white"
+                          }`}
+                        >
+                          {fmtDeadline(job.deadline)}
+                        </p>
+                        <p className="truncate text-[10px] leading-5 text-[#5a5a60] sm:text-[11px]">
+                          {expired ? "Closed" : job.postedAgo}
+                        </p>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="p-2 sm:p-3">
+                        <div className="flex flex-nowrap items-center justify-end gap-1">
+                          <a
+                            href={`/dashboard/recruiter/jobs/${job._id}/edit`}
+                            aria-label="Update job"
+                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-[#5c53fe]/20 px-2 text-[10px] leading-5 font-medium text-[#c3c0ff] outline-none hover:bg-[#5c53fe]/30 sm:px-3 sm:text-xs"
                           >
-                            {dept}
-                          </p>
+                            <SquarePen
+                              className="size-4 shrink-0 sm:size-[18px]"
+                              strokeWidth={2}
+                            />
+                            <span className="hidden lg:inline">Update</span>
+                          </a>
+
+                          <a
+                            href={`/dashboard/recruiter/jobs/${job._id}`}
+                            aria-label="View job"
+                            className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#1f1f1f] outline-none hover:bg-[#232327]"
+                          >
+                            <Eye
+                              className="size-4 text-[#a0a0ab]"
+                              strokeWidth={2}
+                            />
+                          </a>
+
+                          <DeleteJobDialog job={job} />
                         </div>
-                      </div>
-                    </td>
-
-                    {/* Company & location */}
-                    <td className="min-w-0 p-2 sm:p-3">
-                      <p className="truncate text-xs leading-5 font-medium text-white sm:text-[13px]">
-                        {job.company}
-                      </p>
-                      <p className="flex min-w-0 items-center gap-1 text-[10px] leading-5 text-[#a0a0ab] sm:text-xs">
-                        <MapPin className="size-3 shrink-0 sm:size-4" strokeWidth={2} />
-                        <span className="truncate">
-                          {job.isRemote ? `Remote (${job.location})` : job.location}
-                        </span>
-                      </p>
-                    </td>
-
-                    {/* Type */}
-                    <td className="p-2 sm:p-3">
-                      <span className="inline-flex max-w-full items-center rounded-full border border-[#232327] bg-[#1f1f1f] px-2 py-1 text-[10px] leading-4 font-medium whitespace-nowrap text-[#d4d4d8] sm:px-[11px] sm:text-[11px]">
-                        {job.jobType}
-                      </span>
-                    </td>
-
-                    {/* Compensation */}
-                    <td className="p-2 sm:p-3">
-                      <span className="block truncate text-[10px] leading-4 font-medium text-white sm:text-[13px] sm:leading-5">
-                        €{fmtSalary(job.minSalary)} – €{fmtSalary(job.maxSalary)} /{" "}
-                        {salaryUnit[job.salaryFrequency] ?? job.salaryFrequency}
-                      </span>
-                    </td>
-
-                    {/* Applicants */}
-                    <td className="p-2 sm:p-3">
-                      <ApplicantsCell count={job.applicants} />
-                    </td>
-
-                    {/* Status */}
-                    <td className="p-2 sm:p-3">
-                      <StatusCell active={!expired} />
-                    </td>
-
-                    {/* Deadline */}
-                    <td className="p-2 sm:p-3">
-                      <p
-                        className={`truncate text-[11px] leading-5 font-medium sm:text-[13px] ${
-                          expired ? "text-[#a0a0ab]" : "text-white"
-                        }`}
-                      >
-                        {fmtDeadline(job.deadline)}
-                      </p>
-                      <p className="truncate text-[10px] leading-5 text-[#5a5a60] sm:text-[11px]">
-                        {expired ? "Closed" : job.postedAgo}
-                      </p>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="p-2 sm:p-3">
-                      <div className="flex flex-nowrap items-center justify-end gap-1">
-                        <a
-                          href={`/dashboard/recruiter/jobs/${job._id}/edit`}
-                          aria-label="Update job"
-                          className="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-[#5c53fe]/20 px-2 text-[10px] leading-5 font-medium text-[#c3c0ff] outline-none hover:bg-[#5c53fe]/30 sm:px-3 sm:text-xs"
-                        >
-                          <SquarePen className="size-4 shrink-0 sm:size-[18px]" strokeWidth={2} />
-                          <span className="hidden lg:inline">Update</span>
-                        </a>
-
-                        <a
-                          href={`/dashboard/recruiter/jobs/${job._id}`}
-                          aria-label="View job"
-                          className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#1f1f1f] outline-none hover:bg-[#232327]"
-                        >
-                          <Eye className="size-4 text-[#a0a0ab]" strokeWidth={2} />
-                        </a>
-
-                        <DeleteJobDialog job={job}></DeleteJobDialog>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
             </table>
           </div>
         </div>

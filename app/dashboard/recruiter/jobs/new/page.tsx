@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { createJob } from "@/lib/actions/jobs"
 import Link from "next/link"
+import { useSession } from "@/lib/auth-client"
 
 // Exact tokens from the Figma "Add New Job" frame
 const c = {
@@ -28,6 +29,7 @@ const c = {
 export type NewJob = {
   title: string
   company: string
+  recruiterId: string
   category: string
   jobType: string
   isRemote: boolean
@@ -40,23 +42,6 @@ export type NewJob = {
   qualifications: string
   applicants: number
   status: string
-}
-
-const initialJob: NewJob = {
-  title: "",
-  company: "",
-  category: "",
-  jobType: "Full-time",
-  isRemote: false,
-  location: "",
-  deadline: "",
-  minSalary: "",
-  maxSalary: "",
-  salaryFrequency: "",
-  responsibilities: "",
-  qualifications: "",
-  applicants: 0,
-  status: "Active",
 }
 
 const jobTypes = ["Full-time", "Part-time", "Contract", "Internship"]
@@ -84,7 +69,27 @@ const inputClass =
 const NewJobPage = () => {
   const router = useRouter()
 
-  const [job, setJob] = useState<NewJob>(initialJob)
+  // Get logged-in user session
+  const { data: session } = useSession()
+
+  const [job, setJob] = useState<NewJob>({
+    title: "",
+    company: "",
+    recruiterId: "",
+    category: "",
+    jobType: "Full-time",
+    isRemote: false,
+    location: "",
+    deadline: "",
+    minSalary: "",
+    maxSalary: "",
+    salaryFrequency: "",
+    responsibilities: "",
+    qualifications: "",
+    applicants: 0,
+    status: "Active",
+  })
+
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleChange = (
@@ -103,10 +108,20 @@ const NewJobPage = () => {
 
     if (isSubmitting) return
 
+    if (!session?.user.id) {
+      toast.error("Please sign in before publishing a job.")
+      return
+    }
+
     try {
       setIsSubmitting(true)
 
-      const result = await createJob(job)
+      const jobData: NewJob = {
+        ...job,
+        recruiterId: session.user.id,
+      }
+
+      const result = await createJob(jobData)
 
       if (result.acknowledged) {
         toast.success("Job published successfully!", {

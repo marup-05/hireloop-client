@@ -2,8 +2,10 @@
 "use client"
 
 import { applyToJob, getMyApplicationsCount } from "@/lib/api/applications"
+import { getUserPremiumById } from "@/lib/api/user"
 import { useSession } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 type ApplyNowButtonProps = {
   jobId: string
@@ -28,21 +30,29 @@ export function ApplyNowButton({
     if (!user) {
       router.push(`/sign-in?redirectTo=/browse-jobs/${jobId}`)
       return
-    } else if (user.role === "seeker") {
+    }
 
-      // Check user's total application count
+    if (user.role === "seeker") {
+
+      // Check if user is premium
+      const premiumResult = await getUserPremiumById(user.id)
+
+      console.log("Premium Status:", premiumResult)
+
+      // Get user's total application count
       const countResult = await getMyApplicationsCount(user.id)
 
-      // Show application count in console
       console.log("User ID:", user.id)
       console.log("Application Count:", countResult)
 
-      // Redirect to payment if application count is 6 or more
-      if (countResult >= 6) {
+      // Free users can apply for maximum 2 jobs
+      if (!premiumResult.premium && countResult >= 2) {
+        toast.error("You have reached your free application limit. Please upgrade to Premium.")
         router.push("/payment")
         return
       }
 
+      // Application data
       const application = {
         jobId,
         userId: user.id,
@@ -55,15 +65,18 @@ export function ApplyNowButton({
         status: "Applied" as const,
       }
 
+      // Submit application
       const result = await applyToJob(application)
 
       if (result.insertedId) {
         console.log("Application submitted successfully")
+        toast.success("Application submitted successfully!")
         router.push("/browse-jobs")
       }
 
     } else {
-      console.log("user is not a job seeker")
+      console.log("User is not a job seeker")
+      toast.error("Only job seekers can apply for jobs")
     }
   }
 
