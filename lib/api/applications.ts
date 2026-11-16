@@ -27,7 +27,7 @@ export const applyToJob = async (data: ApplicationData) => {
   const res = await fetch(`${BASE_URL}/applications`, {
     method: "POST",
     headers: {
-      "content-type": "application/json",
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(data),
   })
@@ -57,7 +57,7 @@ export const getMyApplications = async (
   return res.json()
 }
 
-// Get all applications submitted for a specific job (recruiter review view)
+// Get applications submitted for a specific job
 export const getJobApplications = async (
   jobId: string
 ): Promise<Application[]> => {
@@ -75,7 +75,7 @@ export const getJobApplications = async (
   return res.json()
 }
 
-// Get total application count of a specific user
+// Get total application count of a user
 export const getMyApplicationsCount = async (
   userId: string
 ): Promise<number> => {
@@ -93,4 +93,25 @@ export const getMyApplicationsCount = async (
   const data: { count: number } = await res.json()
 
   return data.count
+}
+
+// Update application status
+export const updateApplicationsStatus = async (
+  id: string,
+  data: { status: ApplicationStatus }
+) => {
+  const res = await fetch(`${BASE_URL}/applications/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    const error = await res.text()
+    throw new Error(`Update failed: ${res.status} - ${error}`)
+  }
+
+  return res.json()
 }

@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react"
@@ -6,11 +5,9 @@ import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 
 import type { JobRow } from "@/app/dashboard/recruiter/jobs/page"
-import type {
-  Application,
-  ApplicationStatus,
-} from "@/lib/api/applications"
+import type { Application, ApplicationStatus } from "@/lib/api/applications"
 import { StatusPill } from "@/components/status-pill"
+import { updateApplicationsStatus } from "@/lib/actions/applications"
 
 // All possible application statuses, shown in each row's status dropdown
 const statusOptions: ApplicationStatus[] = [
@@ -109,13 +106,19 @@ export function ApplicationsBoard({
   // Applications with any local status changes applied
   const [rows, setRows] = useState(applications)
 
-  // Updates an applicant's status in local state only.
-  // TODO: persist with PATCH /applications/:id — the database
-  // update will be wired up later.
-  const handleStatusChange = (id: string, status: ApplicationStatus) =>
-    setRows((prev) =>
-      prev.map((row) => (row._id === id ? { ...row, status } : row))
-    )
+  // Updates an applicant's status: persists it via PATCH /applications/:id
+  // first, then applies the change to the local state.
+  const handleStatusChange = async (id: string, status: ApplicationStatus) => {
+    const result = await updateApplicationsStatus(id, { status })
+
+    console.log("result", result)
+
+    if (result.modifiedCount > 0) {
+      setRows((prev) =>
+        prev.map((row) => (row._id === id ? { ...row, status } : row))
+      )
+    }
+  }
 
   // Live statistics from the current statuses
   const total = rows.length
@@ -151,7 +154,7 @@ export function ApplicationsBoard({
 
   return (
     <div className="min-h-screen w-full min-w-0 bg-[#131314]">
-      <div className="mx-auto w-full min-w-0 max-w-[1400px] px-4 pt-8 pb-12 sm:px-6 lg:px-8 lg:pt-12">
+      <div className="mx-auto w-full max-w-[1400px] min-w-0 px-4 pt-8 pb-12 sm:px-6 lg:px-8 lg:pt-12">
         {/* Breadcrumb */}
         <div className="flex min-w-0 items-center gap-2">
           <Link
@@ -166,7 +169,7 @@ export function ApplicationsBoard({
             strokeWidth={2}
           />
 
-          <span className="min-w-0 max-w-[160px] truncate text-[13px] leading-5 text-[#a0a0ab] sm:max-w-[280px] lg:max-w-[360px]">
+          <span className="max-w-[160px] min-w-0 truncate text-[13px] leading-5 text-[#a0a0ab] sm:max-w-[280px] lg:max-w-[360px]">
             {job.title}
           </span>
 
@@ -216,7 +219,7 @@ export function ApplicationsBoard({
                   {tableHeadings.map((heading) => (
                     <th
                       key={heading}
-                      className="h-[50px] overflow-hidden border-b border-[#232327] bg-[#0b0b0c] px-3 text-[11px] leading-4 font-semibold tracking-wide whitespace-nowrap text-[#a0a0ab] text-ellipsis"
+                      className="h-[50px] overflow-hidden border-b border-[#232327] bg-[#0b0b0c] px-3 text-[11px] leading-4 font-semibold tracking-wide text-ellipsis whitespace-nowrap text-[#a0a0ab]"
                     >
                       {heading}
                     </th>
@@ -276,7 +279,7 @@ export function ApplicationsBoard({
                         <StatusPill status={application.status} />
                       </td>
 
-                      {/* Update status (local only — database update comes later) */}
+                      {/* Update status (persists via PATCH /applications/:id) */}
                       <td className="p-2 sm:p-3">
                         <select
                           value={application.status}
