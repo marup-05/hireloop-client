@@ -1,15 +1,39 @@
-import { getUsers } from '@/lib/api/user';
-import React from 'react';
 
+import { getSession } from "@/lib/core/server"
+import { getUsers, type AdminUser } from "@/lib/actions/better-auth-users"
+import { UsersBoard } from "./_components/users-board"
 
-const UsersPage = async() => {
-    const users = await getUsers()
-    console.log(users);
+// Full-screen message shown when the page can't be used
+const MessageScreen = ({ children }: { children: React.ReactNode }) => (
+  <div className="flex min-h-screen items-center justify-center bg-[#131314] px-4 text-center text-[#ededef]">
+    {children}
+  </div>
+)
+
+export default async function AdminUsersPage() {
+  // Only signed-in users can view user management
+  const session = await getSession()
+
+  if (!session?.user?.id) {
+    return <MessageScreen>Please sign in to manage users.</MessageScreen>
+  }
+
+  // listUsers is admin-only — non-admins get a friendly message
+  // instead of an unhandled error
+  let users: AdminUser[] = []
+  let denied = false
+
+  try {
+    users = await getUsers()
+  } catch {
+    denied = true
+  }
+
+  if (denied) {
     return (
-        <div>
-            user 
-        </div>
-    );
-};
+      <MessageScreen>You don&apos;t have permission to view users.</MessageScreen>
+    )
+  }
 
-export default UsersPage;
+  return <UsersBoard users={users} />
+}
