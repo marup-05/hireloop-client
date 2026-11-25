@@ -72,7 +72,7 @@ const SignUpPage = () => {
         name,
         email,
         password,
-        role: selectedRole,
+        accountType: selectedRole,
         callbackURL: "/",
       })
 
