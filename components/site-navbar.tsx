@@ -1,6 +1,6 @@
-
 "use client"
 
+import { Popover } from "@base-ui/react/popover"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -16,9 +16,34 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 
-import { MenuIcon } from "lucide-react"
+import {
+  Building2,
+  ChevronDown,
+  LayoutDashboard,
+  MenuIcon,
+  ShieldCheck,
+  type LucideIcon,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { authClient } from "@/lib/auth-client"
+
+const dashboardLinks: { href: string; label: string; icon: LucideIcon }[] = [
+  {
+    href: "/dashboard/seeker",
+    label: "Seeker Dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    href: "/dashboard/recruiter",
+    label: "Recruiter Dashboard",
+    icon: Building2,
+  },
+  {
+    href: "/dashboard/admin",
+    label: "Admin Dashboard",
+    icon: ShieldCheck,
+  },
+]
 
 function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href)
@@ -40,6 +65,71 @@ function Logo() {
         className="h-10 w-auto"
       />
     </Link>
+  )
+}
+
+function DashboardMenu() {
+  const pathname = usePathname()
+  const isDashboardRoute = pathname.startsWith("/dashboard")
+
+  return (
+    <Popover.Root>
+      <Popover.Trigger
+        render={
+          <button
+            type="button"
+            aria-label="Open dashboard links"
+            className={cn(
+              "flex items-center gap-1 text-sm transition-colors outline-none",
+              isDashboardRoute
+                ? "font-medium text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          />
+        }
+      >
+        Dashboards
+        <ChevronDown className="size-3.5" strokeWidth={2} />
+      </Popover.Trigger>
+
+      <Popover.Portal>
+        <Popover.Positioner align="end" sideOffset={12}>
+          <Popover.Popup className="z-50 w-60 rounded-[12px] border bg-popover p-2 text-popover-foreground shadow-lg">
+            <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+              Go to dashboard
+            </p>
+
+            <div className="flex flex-col gap-0.5">
+              {dashboardLinks.map((link) => (
+                <Popover.Close
+                  key={link.href}
+                  render={
+                    <Link
+                      href={link.href}
+                      aria-current={
+                        isActive(pathname, link.href) ? "page" : undefined
+                      }
+                      className={cn(
+                        "flex items-center gap-2.5 rounded-md px-2 py-2 text-sm transition-colors hover:bg-muted",
+                        isActive(pathname, link.href)
+                          ? "font-medium text-foreground"
+                          : "text-muted-foreground"
+                      )}
+                    />
+                  }
+                >
+                  <link.icon
+                    className="size-4 shrink-0 text-primary"
+                    strokeWidth={2}
+                  />
+                  {link.label}
+                </Popover.Close>
+              ))}
+            </div>
+          </Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
   )
 }
 
@@ -80,6 +170,9 @@ function NavLinks({ className }: { className?: string }) {
             </Link>
           </li>
         ))}
+        <li>
+          <DashboardMenu />
+        </li>
       </ul>
     </nav>
   )
@@ -111,11 +204,7 @@ function AuthButtons({ mobile = false }: { mobile?: boolean }) {
   if (session?.user) {
     return (
       <div
-        className={
-          mobile
-            ? "flex flex-col gap-3"
-            : "flex items-center gap-3"
-        }
+        className={mobile ? "flex flex-col gap-3" : "flex items-center gap-3"}
       >
         <p className="text-sm font-medium text-foreground">
           Welcome, <span className="text-primary">{session.user.name}</span>
@@ -149,13 +238,7 @@ function AuthButtons({ mobile = false }: { mobile?: boolean }) {
   }
 
   return (
-    <div
-      className={
-        mobile
-          ? "flex flex-col gap-3"
-          : "flex items-center gap-3"
-      }
-    >
+    <div className={mobile ? "flex flex-col gap-3" : "flex items-center gap-3"}>
       {mobile ? (
         <>
           <SheetClose
@@ -175,9 +258,7 @@ function AuthButtons({ mobile = false }: { mobile?: boolean }) {
           <Button
             size="lg"
             className="w-full rounded-full"
-            render={
-              <SheetClose render={<Link href="/sign-up" />} />
-            }
+            render={<SheetClose render={<Link href="/sign-up" />} />}
           >
             Get Started
           </Button>
@@ -235,9 +316,7 @@ export function SiteNavbar() {
 
           <SheetContent className="gap-0">
             <SheetHeader className="border-b py-5">
-              <SheetTitle className="sr-only">
-                Navigation menu
-              </SheetTitle>
+              <SheetTitle className="sr-only">Navigation menu</SheetTitle>
               <Logo />
             </SheetHeader>
 
@@ -289,6 +368,40 @@ function MobileNavLinks() {
             </SheetClose>
           </li>
         ))}
+
+        <li className="mt-2 border-t pt-2">
+          <p className="px-3 py-2 text-xs font-medium text-muted-foreground">
+            Dashboards
+          </p>
+          <ul className="flex flex-col gap-1">
+            {dashboardLinks.map((link) => (
+              <li key={link.href}>
+                <SheetClose
+                  render={
+                    <Link
+                      href={link.href}
+                      aria-current={
+                        isActive(pathname, link.href) ? "page" : undefined
+                      }
+                    />
+                  }
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-muted",
+                    isActive(pathname, link.href)
+                      ? "font-medium text-foreground"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  <link.icon
+                    className="size-4 shrink-0 text-primary"
+                    strokeWidth={2}
+                  />
+                  {link.label}
+                </SheetClose>
+              </li>
+            ))}
+          </ul>
+        </li>
       </ul>
     </nav>
   )
