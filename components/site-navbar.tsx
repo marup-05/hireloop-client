@@ -1,7 +1,5 @@
-
 "use client"
 
-import { Popover } from "@base-ui/react/popover"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -17,34 +15,26 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 
-import {
-  Building2,
-  ChevronDown,
-  LayoutDashboard,
-  MenuIcon,
-  ShieldCheck,
-  type LucideIcon,
-} from "lucide-react"
+import { MenuIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { authClient } from "@/lib/auth-client"
 
-const dashboardLinks: { href: string; label: string; icon: LucideIcon }[] = [
-  {
-    href: "/dashboard/seeker",
-    label: "Seeker Dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    href: "/dashboard/recruiter",
-    label: "Recruiter Dashboard",
-    icon: Building2,
-  },
-  {
-    href: "/dashboard/admin",
-    label: "Admin Dashboard",
-    icon: ShieldCheck,
-  },
-]
+const dashboardRoutes = {
+  seeker: "/dashboard/seeker",
+  recruiter: "/dashboard/recruiter",
+  admin: "/dashboard/admin",
+} as const
+
+type DashboardAccountType = keyof typeof dashboardRoutes
+
+function getDashboardHref(accountType: string | null | undefined) {
+  const routeKey =
+    accountType && accountType in dashboardRoutes
+      ? (accountType as DashboardAccountType)
+      : "seeker"
+
+  return dashboardRoutes[routeKey]
+}
 
 function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href)
@@ -69,93 +59,31 @@ function Logo() {
   )
 }
 
-function DashboardMenu() {
-  const pathname = usePathname()
-  const isDashboardRoute = pathname.startsWith("/dashboard")
-
-  return (
-    <Popover.Root>
-      <Popover.Trigger
-        render={
-          <button
-            type="button"
-            aria-label="Open dashboard links"
-            className={cn(
-              "flex items-center gap-1 text-sm transition-colors outline-none",
-              isDashboardRoute
-                ? "font-medium text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          />
-        }
-      >
-        Dashboards
-        <ChevronDown className="size-3.5" strokeWidth={2} />
-      </Popover.Trigger>
-
-      <Popover.Portal>
-        <Popover.Positioner align="end" sideOffset={12}>
-          <Popover.Popup className="z-50 w-60 rounded-[12px] border bg-popover p-2 text-popover-foreground shadow-lg">
-            <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-              Go to dashboard
-            </p>
-
-            <div className="flex flex-col gap-0.5">
-              {dashboardLinks.map((link) => (
-                <Popover.Close
-                  key={link.href}
-                  nativeButton={false}
-                  render={
-                    <Link
-                      href={link.href}
-                      aria-current={
-                        isActive(pathname, link.href) ? "page" : undefined
-                      }
-                      className={cn(
-                        "flex items-center gap-2.5 rounded-md px-2 py-2 text-sm transition-colors hover:bg-muted",
-                        isActive(pathname, link.href)
-                          ? "font-medium text-foreground"
-                          : "text-muted-foreground"
-                      )}
-                    />
-                  }
-                >
-                  <link.icon
-                    className="size-4 shrink-0 text-primary"
-                    strokeWidth={2}
-                  />
-                  {link.label}
-                </Popover.Close>
-              ))}
-            </div>
-          </Popover.Popup>
-        </Popover.Positioner>
-      </Popover.Portal>
-    </Popover.Root>
-  )
-}
-
-function NavLinks({ className }: { className?: string }) {
-  const pathname = usePathname()
+function useNavLinks() {
   const { data: session } = authClient.useSession()
 
-  const navLinks = [
+  return [
     { href: "/browse-jobs", label: "Browse Jobs" },
     { href: "/company", label: "Company" },
     { href: "/pricing", label: "Pricing" },
     ...(session?.user
       ? [
           {
-            href: `/dashboard/${session.user.role || "seeker"}`,
+            href: getDashboardHref(session.user.accountType),
             label: "Dashboard",
           },
         ]
       : []),
   ]
+}
+
+function NavLinks({ className }: { className?: string }) {
+  const pathname = usePathname()
+  const navLinks = useNavLinks()
 
   return (
     <nav aria-label="Main navigation" className={className}>
-      <ul className="flex items-center gap-7">
+      <ul className="flex items-center gap-6 lg:gap-8">
         {navLinks.map((link) => (
           <li key={link.href}>
             <Link
@@ -172,9 +100,6 @@ function NavLinks({ className }: { className?: string }) {
             </Link>
           </li>
         ))}
-        <li>
-          <DashboardMenu />
-        </li>
       </ul>
     </nav>
   )
@@ -206,9 +131,16 @@ function AuthButtons({ mobile = false }: { mobile?: boolean }) {
   if (session?.user) {
     return (
       <div
-        className={mobile ? "flex flex-col gap-3" : "flex items-center gap-3"}
+        className={
+          mobile ? "flex flex-col gap-4" : "flex items-center gap-5 lg:gap-6"
+        }
       >
-        <p className="text-sm font-medium text-foreground">
+        <p
+          className={cn(
+            "text-sm font-medium text-foreground",
+            !mobile && "border-r pr-5 lg:pr-6"
+          )}
+        >
           Welcome, <span className="text-primary">{session.user.name}</span>
         </p>
 
@@ -240,7 +172,11 @@ function AuthButtons({ mobile = false }: { mobile?: boolean }) {
   }
 
   return (
-    <div className={mobile ? "flex flex-col gap-3" : "flex items-center gap-3"}>
+    <div
+      className={
+        mobile ? "flex flex-col gap-3" : "flex items-center gap-3 lg:gap-4"
+      }
+    >
       {mobile ? (
         <>
           <SheetClose
@@ -296,11 +232,11 @@ function AuthButtons({ mobile = false }: { mobile?: boolean }) {
 export function SiteNavbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 w-full max-w-[1220px] items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 w-full max-w-[1220px] items-center justify-between gap-6 px-4 sm:px-6 lg:gap-10 lg:px-8">
         <Logo />
 
         {/* Desktop Navigation */}
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-8 md:flex lg:gap-10">
           <NavLinks />
           <AuthButtons />
         </div>
@@ -327,7 +263,7 @@ export function SiteNavbar() {
 
             <MobileNavLinks />
 
-            <SheetFooter className="border-t">
+            <SheetFooter className="border-t p-5">
               <AuthButtons mobile />
             </SheetFooter>
           </SheetContent>
@@ -339,21 +275,7 @@ export function SiteNavbar() {
 
 function MobileNavLinks() {
   const pathname = usePathname()
-  const { data: session } = authClient.useSession()
-
-  const navLinks = [
-    { href: "/browse-jobs", label: "Browse Jobs" },
-    { href: "/company", label: "Company" },
-    { href: "/pricing", label: "Pricing" },
-    ...(session?.user
-      ? [
-          {
-            href: `/dashboard/${session.user.role || "seeker"}`,
-            label: "Dashboard",
-          },
-        ]
-      : []),
-  ]
+  const navLinks = useNavLinks()
 
   return (
     <nav aria-label="Mobile navigation" className="p-4">
@@ -362,6 +284,7 @@ function MobileNavLinks() {
           <li key={link.href}>
             <SheetClose
               render={<Link href={link.href} />}
+              aria-current={isActive(pathname, link.href) ? "page" : undefined}
               className={cn(
                 "flex items-center rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-muted",
                 isActive(pathname, link.href)
@@ -373,40 +296,6 @@ function MobileNavLinks() {
             </SheetClose>
           </li>
         ))}
-
-        <li className="mt-2 border-t pt-2">
-          <p className="px-3 py-2 text-xs font-medium text-muted-foreground">
-            Dashboards
-          </p>
-          <ul className="flex flex-col gap-1">
-            {dashboardLinks.map((link) => (
-              <li key={link.href}>
-                <SheetClose
-                  render={
-                    <Link
-                      href={link.href}
-                      aria-current={
-                        isActive(pathname, link.href) ? "page" : undefined
-                      }
-                    />
-                  }
-                  className={cn(
-                    "flex items-center gap-2.5 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-muted",
-                    isActive(pathname, link.href)
-                      ? "font-medium text-foreground"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  <link.icon
-                    className="size-4 shrink-0 text-primary"
-                    strokeWidth={2}
-                  />
-                  {link.label}
-                </SheetClose>
-              </li>
-            ))}
-          </ul>
-        </li>
       </ul>
     </nav>
   )
