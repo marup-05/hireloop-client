@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Popover } from "@base-ui/react/popover"
@@ -103,6 +104,7 @@ function DashboardMenu() {
               {dashboardLinks.map((link) => (
                 <Popover.Close
                   key={link.href}
+                  nativeButton={false}
                   render={
                     <Link
                       href={link.href}
@@ -218,11 +220,11 @@ function AuthButtons({ mobile = false }: { mobile?: boolean }) {
                 size="lg"
                 className="w-full"
                 onClick={handleSignOut}
-              />
+              >
+                Sign Out
+              </Button>
             }
-          >
-            Sign Out
-          </SheetClose>
+          />
         ) : (
           <Button
             variant="outline"
@@ -255,13 +257,17 @@ function AuthButtons({ mobile = false }: { mobile?: boolean }) {
             Sign In
           </SheetClose>
 
-          <Button
-            size="lg"
-            className="w-full rounded-full"
-            render={<SheetClose render={<Link href="/sign-up" />} />}
-          >
-            Get Started
-          </Button>
+          <SheetClose
+            render={
+              <Button
+                size="lg"
+                className="w-full rounded-full"
+                render={<Link href="/sign-up" />}
+              >
+                Get Started
+              </Button>
+            }
+          />
         </>
       ) : (
         <>
@@ -308,12 +314,11 @@ export function SiteNavbar() {
                 size="icon"
                 className="md:hidden"
                 aria-label="Open navigation menu"
-              />
+              >
+                <MenuIcon />
+              </Button>
             }
-          >
-            <MenuIcon />
-          </SheetTrigger>
-
+          />
           <SheetContent className="gap-0">
             <SheetHeader className="border-b py-5">
               <SheetTitle className="sr-only">Navigation menu</SheetTitle>
