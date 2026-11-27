@@ -13,6 +13,14 @@ export const getSession = async () => {
   return session
 }
 
+export const getToken = async () => {
+  const session = await getSession()
+  if(!session || !session.session?.token){
+    redirect("/unauthorized")
+  }
+  return session.session.token 
+}
+
 export const requireRole = async (role: string) => {
   const session = await getSession()
 
