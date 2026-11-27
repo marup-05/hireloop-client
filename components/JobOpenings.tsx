@@ -1,4 +1,5 @@
 
+import Link from "next/link";
 import { ArrowRight, MapPin, BriefcaseBusiness, Euro } from "lucide-react";
 
 const jobs = [
@@ -73,12 +74,12 @@ export default function JobOpenings() {
         </div>
 
         <div className="mt-7 flex justify-center">
-          <a
-            href="#"
+          <Link
+            href="/browse-jobs"
             className="rounded-md bg-white px-5 py-2.5 text-[10px] font-medium text-black transition hover:bg-gray-200"
           >
             View all job open
-          </a>
+          </Link>
         </div>
       </div>
     </section>

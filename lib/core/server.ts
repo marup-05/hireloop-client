@@ -21,6 +21,16 @@ export const getToken = async () => {
   return session.session.token 
 }
 
+export const authFetch = async(api: string) =>{
+  const token = await getToken();
+  const res = await fetch(api, {
+    headers: {
+      authorization : `Bearer ${token}`
+  }
+    })
+    
+}
+
 export const requireRole = async (role: string) => {
   const session = await getSession()
 
